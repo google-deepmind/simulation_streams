@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2024 DeepMind Technologies Limited.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+  https://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ECSEditor</title>
+    <style>
+        .entity-button{
+            width: 150px;
+            height: 20px;
+        }
+        .component-button {
+            width: 150px;
+            height: 20px;
+        }
+        .operator-button {
+            width: 70px;
+            height: 35px;
+        }
+        .variable-button {
+            width: 80px;
+            height: 35px;
+        }
+    </style>
+</head>
+<body>
+    <div id="ecs-editor" style="display: flex; flex-direction: row;">
+        <!-- Left Panel: Entities and Components -->
+        <div style="flex: 1; margin-right: 20px; background-color: #fff;">
+            <h3 style="color: #000;">Entities</h3>
+            <input type="text" id="entity-name-input" style="width: 200px; background-color: #2b2b2b; color: #f8f8f2;" placeholder="Enter entity name"/>
+            <select id="entity-list" multiple style="width: 200px; height: 150px; background-color: #2b2b2b; color: #f8f8f2;" onchange="onEntitySelect()"></select>
+            <button class="entity-button" onclick="addEntity()">Add Entity</button>
+            <button class="entity-button" onclick="renameEntity()">Rename Entity</button>
+            <button class="entity-button" onclick="removeEntity()">Remove Entity</button>
+            <button class="entity-button" onclick="moveEntity(true)">Move Up</button>
+            <button class="entity-button" onclick="moveEntity(false)">Move Down</button>
+            <h3 style="color: #000;">Components</h3>
+            <input type="text" id="component-name-input" style="width: 200px; background-color: #2b2b2b; color: #f8f8f2;" placeholder="Enter component name"/>
+            <select id="component-list" multiple style="width: 200px; height: 150px; background-color: #2b2b2b; color: #f8f8f2;" onchange="onComponentSelect()"></select>
+            <button class="component-button" onclick="addComponent()">Add Component</button>
+            <button class="component-button" onclick="renameComponent()">Rename Component</button>
+            <button class="component-button" onclick="removeComponent()">Remove Component</button>
+            <button class="component-button" onclick="moveComponent(true)">Move Up</button>
+            <button class="component-button" onclick="moveComponent(false)">Move Down</button>
+            <button class="component-button" onclick="saveComponent()">Save Component</button>
+            <button class="component-button" onclick="uploadComponent()">Upload Component</button>
+        </div>
+
+        <!-- Middle Panel: Operators -->
+        <div style="flex: 1; margin-right: 20px; background-color: #fff;">
+            <h3 style="color: #000;">Operators</h3>
+            <input type="text" id="operator-name-input" style="width: 200px; background-color: #2b2b2b; color: #f8f8f2;" placeholder="Enter operator name"/>
+            <button class="operator-button" style="display: inline-block; width: 80px; vertical-align: top;" onclick="renameOperator()">Rename Operator</button>
+            <select id="operator-list" multiple style="width: 300px; height: 150px; background-color: #2b2b2b; color: #f8f8f2;" onchange="onOperatorSelect()"></select>
+            <div>
+                <button class="operator-button" style="display: inline-block; width: 70px; margin-right: 0; vertical-align: top;" onclick="addOperator()">Add Operator</button>
+                <button class="operator-button" style="display: inline-block; width: 70px; margin-right: 0; vertical-align: top;" onclick="removeOperator()">Remove Operator</button>
+                <button class="operator-button" style="display: inline-block; width: 70px; margin-right: 0; vertical-align: top;" onclick="moveOperator(true)">Move Up</button>
+                <button class="operator-button" style="display: inline-block; width: 70px; vertical-align: top;" onclick="moveOperator(false)">Move Down</button>
+            </div>
+            <h3 style="color: #000;">Operator Fields</h3>
+            <div>
+                <input type="text" id="operator-field-key-input" style="width: 200px; background-color: #2b2b2b; color: #f8f8f2;" placeholder="Enter field key"/>
+                <div id="operator-field-value-input" contenteditable="true" style="width: 300px; height: 70px; background-color: #2b2b2b; color: #f8f8f2; border: 1px solid #ddd; padding: 5px; overflow-y: scroll;"></div>
+            </div>
+            <select id="operator-field-list" multiple style="width: 300px; height: 150px; background-color: #2b2b2b; color: #f8f8f2;" onchange="onOperatorFieldSelect()"></select>
+            <div style="margin-top: 5px; text-align: center;"> <!-- Center the buttons -->
+                <button class="operator-button" style="display: inline-block; width: 80px; margin-right: 10px; vertical-align: top;" onclick="addOperatorField()">Add Field</button>
+                <button class="operator-button" style="display: inline-block; width: 80px; margin-right: 10px; vertical-align: top;" onclick="renameOperatorField()">Change Field</button>
+                <button class="operator-button" style="display: inline-block; width: 80px; vertical-align: top;" onclick="removeOperatorField()">Remove Field</button>
+            </div>
+        </div>
+
+        <!-- Right Panel: Variables and ECS Name -->
+        <div style="flex: 1; margin-right: 20px; background-color: #fff; margin-bottom: 20px;">
+            <h3 style="color: #000;">ECS Name</h3>
+            <input type="text" id="ecs-name" style="width: 200px; background-color: #2b2b2b; color: #f8f8f2;" onchange="updateECSName(this.value)" />
+            <h3 style="color: #000;">Variables</h3>
+            <div>
+                <input type="text" id="variable-field-key-input" style="width: 200px; background-color: #2b2b2b; color: #f8f8f2;" placeholder="Enter field key"/>
+                <input type="text" id="variable-field-value-input" style="width: 200px; background-color: #2b2b2b; color: #f8f8f2;" placeholder="Enter field value"/>
+            </div>
+            <select id="variable-field-list" multiple style="width: 300px; height: 150px; background-color: #2b2b2b; color: #f8f8f2;" onchange="onVariableSelect()"></select>
+            <div style="margin-top: 5px; text-align: center;"> <!-- Center the buttons -->
+                <button class="variable-button" style="display: inline-block; width: 80px; margin-right: 10px; vertical-align: top;" onclick="addVariableField()">Add Field</button>
+                <button class="variable-button" style="display: inline-block; width: 80px; margin-right: 10px; vertical-align: top;" onclick="renameVariableField()">Change Field</button>
+                <button class="variable-button" style="display: inline-block; width: 80px; vertical-align: top;" onclick="removeVariableField()">Remove Field</button>
+            </div>
+        </div>
+
+        <!-- Simulation Output -->
+        <div style="flex: 2; display: flex; flex-direction: column; margin-left: 20px;">
+            <h3 style="color: #000;">Output</h3>
+            <div id="simulation-output" style="width: 100%; height: 250px; border: 1px solid black; overflow-y: scroll; background-color: #2b2b2b;"></div>
+            <input type="text" id="query-input" style="width: 100%; background-color: #2b2b2b; color: #f8f8f2;" value="all=True" placeholder="Enter query"/>
+            <button onclick="applyQuery()">Apply Query</button>
+            <input type="number" id="time-steps-input" style="width: 100%; background-color: #2b2b2b; color: #f8f8f2;" value="10" placeholder="Time Steps"/>
+            <button onclick="runSimulation()">Run Simulation</button>
+            <button onclick="resetSimulation()">Reset Simulation</button>
+            <button onclick="saveEcsToPython()">Save ECS</button>
+            <button onclick="loadEcsFromPython()">Load ECS</button>
+        </div>
+    </div>
+
+    <!-- Analysis Window -->
+    <div style="margin-top: 20px;">
+        <h3 style="color: #000;">Metrics</h3>
+        <div id="plot-output" style="width: 100%; height: 300px; border: 1px solid black; overflow-y: scroll; background-color: #2b2b2b;"></div>
+        <div id="metric-values" style="width: 100%; height: 100px; border: 1px solid black; overflow-y: scroll; background-color: #2b2b2b; color: #f8f8f2;"></div>
+        <input type="text" id="metric-field" style="width: 100%; background-color: #2b2b2b; color: #f8f8f2;" value="world_time" placeholder="Enter metric to analyze"/>
+        <button onclick="addMetric()">Add Metric</button>
+        <button onclick="removeMetric()">Remove Metric</button>
+        <button onclick="extractAllMetrics()">Refresh</button>
+        <button onclick="saveCurrentValues()">Save Results</button>
+
+        <!-- Visualization Type Dropdown -->
+        <select id="visualization-type" style="width: 200px; background-color: #2b2b2b; color: #f8f8f2;">
+            <option value="line_plot">Line Plot</option>
+            <option value="2d_map">2D Map</option>
+        </select>
+        <button onclick="plotAnalysis()">Plot</button>
+        <select id="metric-list" multiple style="width: 100%; height: 150px; background-color: #2b2b2b; color: #f8f8f2;" onchange="onMetricSelect()"></select>
+
+    </div>
+    <script>
+        window.onload = function() {
+            fetch('/initialize')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.js_code) {
+                        eval(data.js_code);
+                    } else {
+                        console.error("Initialization JavaScript code not received.");
+                    }
+                })
+                .catch(error => console.error('Error during initialization:', error));
+        };
+
+        function updateECSName(newName) {
+            fetch('/update_ecs_name', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name: newName })
+            }).then(response => response.json()).then(data => {
+                if (data.js_code) {
+                    eval(data.js_code);
+                }
+                console.log(data);
+            });
+        }
+
+        function extractAllMetrics() {
+            fetch('/extract_all_metrics', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => response.json()).then(data => {
+                if (data.results) {
+                    document.getElementById('metric-values').textContent = JSON.stringify(data.results, null, 2);
+                } else if (data.error) {
+                    alert('Error: ' + data.error);
+                }
+                console.log(data);
+            });
+        }
+
+        function saveCurrentValues() {
+            fetch('/save_current_values', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => response.json()).then(data => {
+                if (data.message) {
+                    alert(data.message);
+                } else if (data.error) {
+                    alert('Error: ' + data.error);
+                }
+                console.log(data);
+            });
+        }
+
+
+        function addEntity() {
+            var entityName = document.getElementById('entity-name-input').value;
+            fetch('/add_entity', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ entity_name: entityName })
+            }).then(response => response.json()).then(data => {
+                if (data.js_code) {
+                    eval(data.js_code);
+                }
+                console.log(data);
+            });
+        }
+
+        function renameEntity() {
+            var newName = document.getElementById('entity-name-input').value;
+            fetch('/rename_entity', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ new_name: newName })
+            }).then(response => response.json()).then(data => {
+                if (data.js_code) {
+                    eval(data.js_code);
+                }
+                console.log(data);
+            });
+        }
+
+        function removeEntity() {
+            fetch('/remove_entity', {
+                method: 'POST'
+            }).then(response => response.json()).then(data => {
+                if (data.js_code) {
+                    eval(data.js_code);
+                }
+                console.log(data);
+            });
+        }
+
+        function moveEntity(up) {
+            fetch('/move_entity', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ up: up })
+            }).then(response => response.json()).then(data => {
+                if (data.js_code) {
+                    eval(data.js_code);
+                }
+                console.log(data);
+            });
+        }
+
+        function addComponent() {
+            var componentName = document.getElementById('component-name-input').value;
+            fetch('/add_component', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ component_name: componentName })
+            }).then(response => response.json()).then(data => {
+                if (data.js_code) {
+                    eval(data.js_code);
+                }
+                console.log(data);
+            });
+        }
+
+        function renameComponent() {
+            var newName = document.getElementById('component-name-input').value;
+            fetch('/rename_component', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ new_name: newName })
+            }).then(response => response.json()).then(data => {
+                if (data.js_code) {
+                    eval(data.js_code);
+                }
+                console.log(data);
+            });
+        }
+
+        function removeComponent() {
+            fetch('/remove_component', {
+                method: 'POST'
+            }).then(response => response.json()).then(data => {
+                if (data.js_code) {
+                    eval(data.js_code);
+                }
+                console.log(data);
+            });
+        }
+
+        function moveComponent(up) {
+            fetch('/move_component', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ up: up })
+            }).then(response => response.json()).then(data => {
+                if (data.js_code) {
+                    eval(data.js_code);
+                }
+                console.log(data);
+            });
+        }
+
+        function addOperator() {
+            var newName = document.getElementById('operator-name-input').value;
+            fetch('/add_operator', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ new_name: newName })
+            }).then(response => response.json()).then(data => {
+                if (data.js_code) {
+                    eval(data.js_code);
+                }
+                console.log(data);
+            });
+        }
+
+        function renameOperator() {
+            var newName = document.getElementById('operator-name-input').value;
+            fetch('/rename_operator', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ new_name: newName })
+            }).then(response => response.json()).then(data => {
+                if (data.js_code) {
+                    eval(data.js_code);
+                }
+                console.log(data);
+            });
+        }
+
+
+
+        function removeOperator() {
+            fetch('/remove_operator', {
+                method: 'POST'
+            }).then(response => response.json()).then(data => {
+                if (data.js_code) {
+                    eval(data.js_code);
+                }
+                console.log(data);
+            });
+        }
+
+        function moveOperator(up) {
+            fetch('/move_operator', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ up: up })
+            }).then(response => response.json()).then(data => {
+                if (data.js_code) {
+                    eval(data.js_code);
+                }
+                console.log(data);
+            });
+        }
+
+
+        function runSimulation() {
+            var timeSteps = document.getElementById('time-steps-input').value;
+            var stepsCompleted = 0;
+
+            function performStep() {
+                fetch('/run_simulation_step', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ time_steps: 1 })  // Run one step at a time
+                }).then(response => response.json()).then(data => {
+                    if (data.js_code) {
+                        eval(data.js_code);
+                    }
+                    stepsCompleted++;
+                    if (stepsCompleted < timeSteps) {
+                        performStep();
+                    }
+                });
+            }
+
+            performStep();  // Start the first step
+        }
+
+
+        function resetSimulation() {
+            fetch('/reset_simulation', {
+                method: 'POST'
+            }).then(response => response.json()).then(data => {
+                if (data.js_code) {
+                    eval(data.js_code);
+                }
+                console.log(data);
+            });
+        }
+
+        function applyQuery() {
+            var query = document.getElementById('query-input').value;
+            fetch('/apply_query', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ query: query })
+            }).then(response => response.json()).then(data => {
+                if (data.js_code) {
+                    eval(data.js_code);
+                }
+                console.log(data);
+            });
+        }
+
+        function saveECSConfiguration() {
+            fetch('/save_ecs_configuration', {
+                method: 'POST'
+            }).then(response => response.json()).then(data => {
+                if (data.js_code) {
+                    eval(data.js_code);
+                }
+                let a = document.createElement('a');
+                a.href = data.download_link;
+                a.download = data.file_name;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                console.log(data);
+            });
+        }
+
+        function loadEcsFromPython() {
+            let input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.py';
+            input.onchange = function(event) {
+                let file = event.target.files[0];
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    fetch('/load_ecs_from_python', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'text/plain'
+                        },
+                        body: e.target.result
+                    }).then(response => response.json()).then(data => {
+                        if (data.js_code) {
+                            eval(data.js_code);
+                        }
+                        console.log(data);
+                    });
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        function saveEcsToPython() {
+            fetch('/save_ecs_configuration_py', {
+                method: 'POST'
+            }).then(response => response.json()).then(data => {
+                if (data.js_code) {
+                    eval(data.js_code);
+                }
+                let a = document.createElement('a');
+                a.href = data.download_link;
+                a.download = data.file_name;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                console.log(data);
+            });
+        }
+
+        function uploadECSConfiguration() {
+            let input = document.createElement('input');
+            input.type = 'file';
+            input.onchange = function(event) {
+                let file = event.target.files[0];
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    fetch('/upload_ecs_configuration', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/octet-stream'
+                        },
+                        body: e.target.result
+                    }).then(response => response.json()).then(data => {
+                        if (data.js_code) {
+                            eval(data.js_code);
+                        }
+                        console.log(data);
+                    });
+                };
+                reader.readAsArrayBuffer(file);
+            };
+            input.click();
+        }
+
+        function saveComponent() {
+            fetch('/save_component', {
+                method: 'POST'
+            }).then(response => response.json()).then(data => {
+                if (data.js_code) {
+                    eval(data.js_code);
+                }
+                let a = document.createElement('a');
+                a.href = data.download_link;
+                a.download = data.file_name;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                console.log(data);
+            });
+        }
+
+        function uploadComponent() {
+            let input = document.createElement('input');
+            input.type = 'file';
+            input.onchange = function(event) {
+                let file = event.target.files[0];
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    fetch('/upload_component', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/octet-stream'
+                        },
+                        body: e.target.result
+                    }).then(response => response.json()).then(data => {
+                        if (data.js_code) {
+                            eval(data.js_code);
+                        }
+                        console.log(data);
+                    });
+                };
+                reader.readAsArrayBuffer(file);
+            };
+            input.click();
+        }
+
+
+        function uploadComponent() {
+            let input = document.createElement('input');
+            input.type = 'file';
+            input.onchange = function(event) {
+                let file = event.target.files[0];
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    fetch('/upload_component', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/octet-stream'
+                        },
+                        body: e.target.result
+                    }).then(response => response.json()).then(data => {
+                        if (data.js_code) {
+                            eval(data.js_code);
+                        }
+                        console.log(data);
+                    });
+                };
+                reader.readAsArrayBuffer(file);
+            };
+            input.click();
+        }
+
+
+        function uploadComponent() {
+            let input = document.createElement('input');
+            input.type = 'file';
+            input.onchange = function(event) {
+                let file = event.target.files[0];
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    fetch('/upload_component', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/octet-stream'
+                        },
+                        body: e.target.result
+                    }).then(response => response.json()).then(data => {
+                        if (data.js_code) {
+                            eval(data.js_code);
+                        }
+                        console.log(data);
+                    });
+                };
+                reader.readAsArrayBuffer(file);
+            };
+            input.click();
+        }
+
+        function addVariableField() {
+            var key = document.getElementById('variable-field-key-input').value;
+            var value = document.getElementById('variable-field-value-input').value;
+            if (!key || document.getElementById('variable-field-list').querySelector(`option[value="${key}"]`)) {
+                key = "Field" + (document.getElementById('variable-field-list').options.length + 1);
+            }
+            if (!value) {
+                value = "default_value";
+            }
+            fetch('/add_variable_field', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ key: key, value: value })
+            }).then(response => response.json()).then(data => {
+                if (data.js_code) {
+                    eval(data.js_code);
+                }
+                console.log(data);
+            });
+        }
+
+        function renameVariableField() {
+            var newKey = document.getElementById('variable-field-key-input').value;
+            var newValue = document.getElementById('variable-field-value-input').value;
+            fetch('/rename_variable_field', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ new_key: newKey, new_value: newValue })
+            }).then(response => response.json()).then(data => {
+                if (data.js_code) {
+                    eval(data.js_code);
+                }
+                console.log(data);
+            });
+        }
+
+        function removeVariableField() {
+            var variableFieldList = document.getElementById('variable-field-list');
+            var selectedField = Array.from(variableFieldList.selectedOptions).map(option => option.value)[0];
+            fetch('/remove_variable_field', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ field_name: selectedField })
+            }).then(response => response.json()).then(data => {
+                if (data.js_code) {
+                    eval(data.js_code);
+                }
+                console.log(data);
+            });
+        }
+
+        function onEntitySelect() {
+            var entityList = document.getElementById('entity-list');
+            var selectedEntities = Array.from(entityList.selectedOptions).map(option => option.value);
+            fetch('/on_entity_select', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ entities: selectedEntities })
+            }).then(response => response.json()).then(data => {
+                if (data.js_code) {
+                    eval(data.js_code);
+                }
+                console.log(data);
+            });
+        }
+
+        function onComponentSelect() {
+            var componentList = document.getElementById('component-list');
+            var selectedComponents = Array.from(componentList.selectedOptions).map(option => option.value);
+            fetch('/on_component_select', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ components: selectedComponents })
+            }).then(response => response.json()).then(data => {
+                if (data.js_code) {
+                    eval(data.js_code);
+                }
+                console.log(data);
+            });
+        }
+
+
+        function onVariableSelect() {
+            let variableFieldList = document.getElementById('variable-field-list');
+            let selectedField = Array.from(variableFieldList.selectedOptions).map(option => option.value)[0];
+            fetch('/on_select_variable', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ key: selectedField })
+            }).then(response => response.json()).then(data => {
+                if (data.js_code) {
+                    eval(data.js_code);
+                } else {
+                    console.error("Initialization JavaScript code not received.");
+                }
+                console.log(data);
+            });
+        }
+
+        function onOperatorSelect() {
+            var operatorList = document.getElementById('operator-list');
+            var selectedOperators = Array.from(operatorList.selectedOptions).map(option => option.value);
+            fetch('/on_operator_select', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ operator_indices: selectedOperators })
+            }).then(response => response.json()).then(data => {
+                if (data.js_code) {
+                    eval(data.js_code);
+                }
+                console.log(data);
+            });
+        }
+
+        function onOperatorFieldSelect() {
+            var operatorFieldList = document.getElementById('operator-field-list');
+            var selectedField = Array.from(operatorFieldList.selectedOptions).map(option => option.value)[0];
+            fetch('/on_operator_field_select', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ field_name: selectedField })
+            }).then(response => response.json()).then(data => {
+                if (data.js_code) {
+                    eval(data.js_code);
+                }
+                console.log(data);
+            });
+        }
+
+        function onMetricSelect() {
+            var metricList = document.getElementById('metric-list');
+            var selectedMetric = Array.from(metricList.selectedOptions).map(option => option.value)[0];
+            fetch('/on_metric_select', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ metric: selectedMetric })
+            }).then(response => response.json()).then(data => {
+                if (data.js_code) {
+                    eval(data.js_code);
+                }
+                console.log(data);
+            });
+        }
+
+        function addOperatorField() {
+            var key = document.getElementById('operator-field-key-input').value;
+            var value = document.getElementById('operator-field-value-input').innerText;
+            fetch('/add_operator_field', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ key: key, value: value })
+            }).then(response => response.json()).then(data => {
+                if (data.js_code) {
+                    eval(data.js_code);
+                }
+                console.log(data);
+            });
+        }
+
+        function renameOperatorField() {
+            var newKey = document.getElementById('operator-field-key-input').value;
+            var newValue = document.getElementById('operator-field-value-input').innerText;
+            fetch('/rename_operator_field', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ new_key: newKey, new_value: newValue })
+            }).then(response => response.json()).then(data => {
+                if (data.js_code) {
+                    eval(data.js_code);
+                }
+                console.log(data);
+            });
+        }
+
+        function removeOperatorField() {
+            var operatorFieldList = document.getElementById('operator-field-list');
+            var selectedField = Array.from(operatorFieldList.selectedOptions).map(option => option.value)[0];
+            fetch('/remove_operator_field', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ field_name: selectedField })
+            }).then(response => response.json()).then(data => {
+                if (data.js_code) {
+                    eval(data.js_code);
+                }
+                console.log(data);
+            });
+        }
+
+        function addMetric() {
+            var metric = document.getElementById('metric-field').value;
+            fetch('/analyze_simulation', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ field: metric })
+            }).then(response => response.json()).then(data => {
+                if (data.js_code) {
+                    eval(data.js_code);
+                }
+                console.log(data);
+            });
+        }
+
+        function removeMetric() {
+            var metricList = document.getElementById('metric-list');
+            var selectedMetric = Array.from(metricList.selectedOptions).map(option => option.value)[0];
+            fetch('/remove_metric', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ metric: selectedMetric })
+            }).then(response => response.json()).then(data => {
+                if (data.js_code) {
+                    eval(data.js_code);
+                }
+                console.log(data);
+            });
+        }
+
+        function extractMetric() {
+            var metric = document.getElementById('metric-field').value;
+            fetch('/extract_metric', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ metric: metric })
+            }).then(response => response.json()).then(data => {
+                if (data.js_code) {
+                    eval(data.js_code);
+                }
+                console.log(data);
+            });
+        }
+
+        function plotAnalysis() {
+            var selectedMetrics = Array.from(document.getElementById('metric-list').selectedOptions).map(option => option.value);
+            var visualizationType = document.getElementById('visualization-type').value;
+            fetch('/plot_analysis', {
+                method: 'POST',
+                headers: {
+                'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ metrics: selectedMetrics, visualization_type: visualizationType })
+            }).then(response => response.json()).then(data => {
+                if (data.js_code) {
+                eval(data.js_code);
+                }
+                console.log(data);
+            });
+        }
+
+
+    </script>
+</body>
+</html>

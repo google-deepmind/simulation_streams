@@ -1,0 +1,4 @@
+world_time
+agent_position_x
+agent_position_y
+agent_score

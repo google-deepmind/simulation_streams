@@ -1,0 +1,4 @@
+world_time
+mouse_position_x
+mouse_position_y
+mouse_score

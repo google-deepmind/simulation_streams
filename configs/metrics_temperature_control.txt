@@ -1,0 +1,3 @@
+world_time
+world_temperature
+world_score

@@ -1,0 +1,3 @@
+world_time
+car_position
+car_score

@@ -1,0 +1,4 @@
+world_time
+robot_position_x
+robot_position_y
+robot_score
