@@ -9,6 +9,8 @@ dependencies and ends with instructions for the different commands for
 launching the editor or command line running. The editor is displayed in a
 browser.
 
+DO NOT SUBMIT
+
 A library of simulation configs can be found under configs,
 including a market economy, a social simulation and 6 tasks from
 the classical reinforcement learning literature.
