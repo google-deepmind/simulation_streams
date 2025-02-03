@@ -1,5 +1,7 @@
 # simulation_streams
 
+[Simulation Streams Tech Report](https://arxiv.org/abs/2501.18668)
+
 A development platform for simulations with large language models.
 It comes with an Entity-Component-Systems approach and graphical editor.
 
@@ -23,7 +25,7 @@ the classical reinforcement learning literature.
     python app.py configs/social_catch_game.py --metrics=configs/metrics_social_catch_game.txt --web --model='gemini-2.0-flash-exp' --api_key='your_key'
     ```
 
-2b **To run a number of steps on the command line and get the metrics returned:**
+2b **To run a number of steps from the command line and return the metrics:**
 
     ```
     python app.py configs/social_catch_game.py --metrics=configs/metrics_social_catch_game.txt --steps=10 --model='gemini-2.0-flash-exp' --api_key='your_key'
@@ -34,6 +36,20 @@ the classical reinforcement learning literature.
     ```
     python app.py --web --model='gemini-2.0-flash-exp' --api_key='your_key'
     ```
+
+## Citing Simulation Streams
+
+If you use Simulation Streams in your work,
+please cite the accompanying article:
+
+```
+@article{sunehag2025simulation,
+  title={Simulation Streams: A Programming Paradigm for Controlling Large Language Models and Building Complex Systems with Generative AI.},
+  author={Sunehag, Peter and Leibo, Joel Z},
+  journal={arXiv preprint arXiv:2501.18668},
+  year={2025}
+}
+```
 
 ## Disclaimer
 
