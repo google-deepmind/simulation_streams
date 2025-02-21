@@ -77,9 +77,11 @@ def query_history(history, **kwargs):
   return context.rstrip('\n') + '\n'
 
 
-def run_formula(state, formula_data, max_attempts, sampling, history):
+def run_formula(state, formula_data, max_attempts, sampling, history,
+                task_name=''):
   """Runs a given formula to update the state."""
   formula = formula_data['formula']
+  state['state'] = state
   output = []
 
   if 'prompt' in formula_data:
@@ -91,7 +93,7 @@ def run_formula(state, formula_data, max_attempts, sampling, history):
   use_lm_setting = formula_data.get('use_lm', False)
   if isinstance(use_lm_setting, str):
     try:
-      s = evaluator()
+      s = evaluator(task_name)
       s.names = state
       use_lm_setting = s.eval(use_lm_setting)
     except Exception as e:  # pylint: disable=broad-exception-caught
@@ -119,7 +121,7 @@ def run_formula(state, formula_data, max_attempts, sampling, history):
     rhs_default = formula.split('=', 1)[1].strip() if '=' in formula else None
     if rhs_default is not None:
       try:
-        s = evaluator()
+        s = evaluator(task_name)
         s.names = state
         default_value = s.eval(rhs_default)
         if isinstance(default_value, (int, float)):
@@ -181,7 +183,7 @@ def run_formula(state, formula_data, max_attempts, sampling, history):
 
       if sampled_formula.startswith(default_assignment):
         try:
-          s = evaluator()
+          s = evaluator(task_name)
           s.names = state
           value = s.eval(sampled_formula.split('=', 1)[1].strip())
           is_number = expected_type in [
@@ -189,11 +191,14 @@ def run_formula(state, formula_data, max_attempts, sampling, history):
           ] and isinstance(value, (int, float, np.number))
           is_bool = expected_type == 'bool' and isinstance(value, bool)
           is_str = expected_type == 'str' and isinstance(value, str)
+          is_tuple = expected_type == 'tuple' and isinstance(value, tuple)
+          is_list = expected_type == 'list' and isinstance(value, list)
+          is_dict = expected_type == 'dict' and isinstance(value, dict)
 
-          if is_number or is_bool or is_str:
+          if is_number or is_bool or is_str or is_tuple or is_list or is_dict:
             state[default_assignment] = value
-            if isinstance(value, str):
-              output_value = f'{default_assignment} = "{value}"'
+            if isinstance(value, (str, tuple, list, dict)):
+              output_value = f'{default_assignment} = {repr(value)}'
             else:
               output_value = f'{default_assignment} = {value}'
             output.append(
@@ -233,7 +238,7 @@ def run_formula(state, formula_data, max_attempts, sampling, history):
         lhs = lhs.strip()
         rhs = rhs.strip()
 
-        s = evaluator()
+        s = evaluator(task_name)
         s.names = state
         value = s.eval(rhs)
 
@@ -271,8 +276,8 @@ def run_formula(state, formula_data, max_attempts, sampling, history):
 
 
 def simulation_stream_generator(
-    initial_state, operators, first_operator, max_attempts=3, sampling=None
-):
+    initial_state, operators, first_operator, max_attempts=3, sampling=None,
+    task_name=''):
   """Generates a sequence of states by applying operators from a given list.
 
   Args:
@@ -281,6 +286,7 @@ def simulation_stream_generator(
       first_operator: The operator to start with
       max_attempts: The number of attempts to reach a compliant sample .
       sampling: The sampling function used.
+      task_name: The name of the task to load task functions for.
 
   Yields:
       New states
@@ -304,7 +310,7 @@ def simulation_stream_generator(
         state[key] = value
 
     state, output = run_formula(
-        state, formula_data, max_attempts, sampling, history
+        state, formula_data, max_attempts, sampling, history, task_name
     )
 
     # Append to the history and then yield the current step's data
@@ -410,12 +416,20 @@ def generate_operators(
     variables,
     systems_definitions,
     world_entity_name='world',
-    default_values=None,):
+    task_name='',
+    default_values=None,
+):
   """Generates operators and initial_state for the history generator."""
   if default_values is None:
     default_values = {}
+
   systems_definitions = preprocess_systems_definitions(systems_definitions)
-  s = evaluator()
+  s = evaluator(task_name)
+
+  # Initialize state dictionary and make it self-referential
+  state = {}
+  state['state'] = state  # Make state a member of itself
+  s.names = state  # Add state to evaluator's namespace
 
   # Components
   components = {}
@@ -435,6 +449,9 @@ def generate_operators(
           # If it's not a callable expression, use the value as is
           components[full_component_name] = initial_value
 
+  # Update state with components
+  state.update(components)
+
   # Systems
   world_entity = world_entity_name
 
@@ -443,8 +460,24 @@ def generate_operators(
   for entity, entity_variables in entities.items():
     entity_systems = []
     for variable in entity_variables:
+      formulas = None
       if variable in systems_definitions:
+        print(f'Systems_definitions applied for {variable}!')
         formulas = systems_definitions[variable]
+        print(formulas)
+      elif variable in s.functions:
+        print('Programatic systems_definitions applied for {variable}!')
+        try:
+          system_generator = s.functions[variable]
+          generated_systems = system_generator()
+          if isinstance(generated_systems, (list, tuple)):
+            formulas = generated_systems
+          else:
+            formulas = [generated_systems]
+        except Exception as e:  # pylint: disable=broad-exception-caught
+          print(f'Error generating systems for {variable}: {str(e)}')
+
+      if formulas:
         for i, formula_dict in enumerate(formulas):
           if i == 0:
             op_id = f'operator_1_{entity}_{variable}'
@@ -479,16 +512,12 @@ def generate_operators(
       else:
         operator['next'] = all_systems[0]['id']
 
-  # Initial state
-  initial_state = {
-      component_name: value for component_name, value in components.items()
-  }
-  initial_state.update({
+  # Update state with default values
+  state.update({
       'agent_index': 0,
       'prompt': '',
-      'max_context_length': 10000,
+      'max_context_length': 100000,
       'sample_mode': 'full',
       'all': True,
   })
-
-  return all_systems, initial_state
+  return all_systems, state

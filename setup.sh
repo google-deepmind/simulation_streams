@@ -56,3 +56,5 @@ echo "   python app.py path/to/ecs_config.py --web --model=MODEL_NAME --api_key=
 echo
 echo "3. To run a simulation from the command line with custom metrics:"
 echo "   python app.py path/to/ecs_config.py --steps=10 --metrics=path/to/metrics_file.json --model=MODEL_NAME --api_key=YOUR_API_KEY"
+echo "4. To run a task using a generic code_world config:"
+echo "   python app.py configs/code_world.py --web --task_name=TASK_NAME --model=MODEL_NAME --api_key=YOUR_API_KEY"

@@ -503,11 +503,13 @@ if __name__ == '__main__':
   parser.add_argument(
       '--model', type=str, default='gemini-1.5-pro', help='LLM model'
   )
-  parser.add_argument(
-      '--api_key', type=str, default='', help='API key'
-  )
+  parser.add_argument('--api_key', type=str, default='', help='API key')
   parser.add_argument(
       '--output_file', type=str, default='', help='File to save query results'
+  )
+
+  parser.add_argument(
+      '--task_name', type=str, default='', help='Task name'
   )
 
   args = parser.parse_args()
@@ -518,6 +520,8 @@ if __name__ == '__main__':
 
   if args.ecs_file:
     load_ecs_from_file(args.ecs_file, args.index)
+  if args.task_name:
+    ecs_editor.task_name = args.task_name
 
   if args.web:
     if args.metrics:

@@ -37,6 +37,18 @@ the classical reinforcement learning literature.
     python app.py --web --model='gemini-2.0-flash-exp' --api_key='your_key'
     ```
 
+2d **To use the generic code_world config with task-specific functions:**
+
+    ```
+    python app.py configs/code_world.py --web --model='gemini-2.0-pro-exp' --api_key='your_key' --task_name='maze'
+    ```
+
+This example demonstrates using the generic code_world configuration to run
+a maze task. The task_name parameter imports task-specific functions from
+the corresponding Python module, allowing you to implement custom
+environments in pure Python while leveraging the simulation streams
+framework.
+
 ## Citing Simulation Streams
 
 If you use Simulation Streams in your work,

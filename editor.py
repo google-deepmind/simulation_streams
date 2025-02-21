@@ -103,6 +103,7 @@ class ECSEditor:
     self.component_library = {}  # Default is an empty component library
     self.last_clicked = None
     self.ecs_name = 'ecs_config'  # Default ECS name
+    self.task_name = ''  # Default task name
     self.model = ''
     self.api_key = ''  # No default api_key
     self.sampling = sampling
@@ -433,6 +434,7 @@ class ECSEditor:
           self.ecs['entities'],
           self.ecs['variables'],
           self.ecs['systems_definitions'],
+          task_name=self.task_name,
           default_values=defaults,
       )
       prompt = (
@@ -475,7 +477,8 @@ class ECSEditor:
               operators,
               first_operator_id,
               max_attempts=10,
-              sampling=sampler),
+              sampling=sampler,
+              task_name=self.task_name),
       }
 
     end_time = (
@@ -516,7 +519,7 @@ class ECSEditor:
   def apply_query(self, query):
     """Apply a query to the simulation history."""
     try:
-      s = evaluator()  # Initialize the SimpleEval evaluator
+      s = evaluator(self.task_name)  # Initialize the SimpleEval evaluator
       query_dict = s.eval(f'dict({query})')  # Safely evaluate the query string
       query_result = query_history(
           self.simulation_data['stream'], **query_dict
