@@ -14,17 +14,24 @@
 
 """A collection of task functions for various environments."""
 
+from all_task_functions import fourrooms_task_functions
 from all_task_functions import key_chest_functions
+from all_task_functions import keydoor_task_functions
 from all_task_functions import maze_functions
 from all_task_functions import mountain_car_functions
+
 
 key_chest_functions = key_chest_functions.key_chest_functions
 maze_functions = maze_functions.maze_functions
 mountain_car_functions = mountain_car_functions.mountain_car_functions
+fourrooms_task_functions = fourrooms_task_functions.fourrooms_task_functions
+keydoor_task_functions = keydoor_task_functions.keydoor_task_functions
 
 
 task_functions = {
+    'four_rooms': fourrooms_task_functions,
     'key_chest': key_chest_functions,
+    'key_door': keydoor_task_functions,
     'mountain_car': mountain_car_functions,
     'maze': maze_functions,
 }

@@ -36,7 +36,7 @@ def read_context(history, query, current_state):
     A string with the relevant context.
 
   """
-  max_context_length = current_state.get('max_context_length', 10000)
+  max_context_length = current_state.get('max_context_length', 1000000)
 
   if query is None:
     return ''
@@ -49,7 +49,21 @@ def read_context(history, query, current_state):
       expanded_query[k] = v
 
   context = query_history(history, **expanded_query)
-  return context[-max_context_length:]  # Apply the cut-off
+
+  # Check if truncation will occur
+  is_truncated = len(context) > max_context_length
+  # Apply the cut-off
+  truncated_context = context[-max_context_length:]
+
+  # Add truncation notice if needed
+  if is_truncated:
+    truncation_notice = (
+        '[Note: The following history has been truncated due to length'
+        ' constraints and can, due to this, start mid-turn.]\n\n'
+    )
+    return truncation_notice + truncated_context
+
+  return truncated_context
 
 
 def query_history(history, **kwargs):
@@ -516,7 +530,7 @@ def generate_operators(
   state.update({
       'agent_index': 0,
       'prompt': '',
-      'max_context_length': 100000,
+      'max_context_length': 1000000,
       'sample_mode': 'full',
       'all': True,
   })

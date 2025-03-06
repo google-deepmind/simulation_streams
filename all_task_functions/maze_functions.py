@@ -235,7 +235,6 @@ def update_state(state):
 
   dx = state.get('mouse_position_x') - state.get('mouse_cheese_x')
   dy = state.get('mouse_position_y') - state.get('mouse_cheese_y')
-  dy = state.get('mouse_position_y') - state.get('mouse_cheese_y')
   dist = np.sqrt(dx**2 + dy**2)
   if dist != 0:
     state['mouse_smell_of_cheese'] = round(1 / dist, 2)
@@ -345,4 +344,11 @@ maze_functions = {
     'update_current_status': update_current_status,
     'take_action': take_action,
     'generate_moderately_open_maze': generate_moderately_open_maze,
+    'get_maze_obstacles': get_maze_obstacles,
+    'get_maze_start_position': get_maze_start_position,
+    'get_maze_goal_position': get_maze_goal_position,
+    'get_maze_start_x': get_maze_start_x,
+    'get_maze_start_y': get_maze_start_y,
+    'get_maze_goal_position_x': get_maze_goal_position_x,
+    'get_maze_goal_position_y': get_maze_goal_position_y,
 }
