@@ -616,6 +616,7 @@ class GridEnv:
         f"Direction: {DIRECTION_MAP.get(env.agent_dir, 'unknown')}\n"
         f"Mission: {env.mission}\n"
         f"Goal Reached: {state.get('goal_reached', False)}\n"
+        f"Score: {state.get('agent_score', 0)}\n"
         f"Inventory: {inv}\n"
         f"Map:\n{state.get('obs_text', '')}\n"
     )
