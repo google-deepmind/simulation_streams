@@ -500,9 +500,9 @@ class GridEnv:
     if not hasattr(self, "agent_score"):
       self.agent_score = 0
     if action == GridEnv.Actions.LEFT:
-      self.agent_dir = (self.agent_dir - 1) % 4
+      self.agent_dir = (self.agent_dir - 1) % 4  # pyrefly: ignore[unsupported-operation]
     elif action == GridEnv.Actions.RIGHT:
-      self.agent_dir = (self.agent_dir + 1) % 4
+      self.agent_dir = (self.agent_dir + 1) % 4  # pyrefly: ignore[unsupported-operation]
     elif action == GridEnv.Actions.FORWARD:
       dx, dy = 0, 0
       if self.agent_dir == 0:
@@ -513,8 +513,8 @@ class GridEnv:
         dx = -1
       elif self.agent_dir == 3:
         dy = -1
-      new_x = self.agent_pos[0] + dx
-      new_y = self.agent_pos[1] + dy
+      new_x = self.agent_pos[0] + dx  # pyrefly: ignore[unsupported-operation]
+      new_y = self.agent_pos[1] + dy  # pyrefly: ignore[unsupported-operation]
       if 0 <= new_x < self.width and 0 <= new_y < self.height:
         cell = self.grid.get(new_x, new_y)
         if cell is not None:
@@ -712,7 +712,7 @@ def get_task_functions(env_class: Type[T]) -> Dict[str, Any]:
         "step_count": env.step_count,
         "agent_history": "",
         "goal_reached": False,
-        "obs_text": render_obs_text(obs, env.agent_pos, env.agent_dir),
+        "obs_text": render_obs_text(obs, env.agent_pos, env.agent_dir),  # pyrefly: ignore[bad-argument-type]
         "grid_size": env.width,
         "agent_action": 2,
         "agent_score": 0,

@@ -213,25 +213,25 @@ def describe_fourrooms_environment(
 
   # Forward position based on current direction
   if agent_dir == 0:  # Facing right
-    relative_dirs["forward"] = (pos[0] + 1, pos[1])
-    relative_dirs["left"] = (pos[0], pos[1] - 1)
-    relative_dirs["right"] = (pos[0], pos[1] + 1)
-    relative_dirs["behind"] = (pos[0] - 1, pos[1])
+    relative_dirs["forward"] = (pos[0] + 1, pos[1])  # pyrefly: ignore[unsupported-operation]
+    relative_dirs["left"] = (pos[0], pos[1] - 1)  # pyrefly: ignore[unsupported-operation]
+    relative_dirs["right"] = (pos[0], pos[1] + 1)  # pyrefly: ignore[unsupported-operation]
+    relative_dirs["behind"] = (pos[0] - 1, pos[1])  # pyrefly: ignore[unsupported-operation]
   elif agent_dir == 1:  # Facing down
-    relative_dirs["forward"] = (pos[0], pos[1] + 1)
-    relative_dirs["left"] = (pos[0] + 1, pos[1])
-    relative_dirs["right"] = (pos[0] - 1, pos[1])
-    relative_dirs["behind"] = (pos[0], pos[1] - 1)
+    relative_dirs["forward"] = (pos[0], pos[1] + 1)  # pyrefly: ignore[unsupported-operation]
+    relative_dirs["left"] = (pos[0] + 1, pos[1])  # pyrefly: ignore[unsupported-operation]
+    relative_dirs["right"] = (pos[0] - 1, pos[1])  # pyrefly: ignore[unsupported-operation]
+    relative_dirs["behind"] = (pos[0], pos[1] - 1)  # pyrefly: ignore[unsupported-operation]
   elif agent_dir == 2:  # Facing left
-    relative_dirs["forward"] = (pos[0] - 1, pos[1])
-    relative_dirs["left"] = (pos[0], pos[1] + 1)
-    relative_dirs["right"] = (pos[0], pos[1] - 1)
-    relative_dirs["behind"] = (pos[0] + 1, pos[1])
+    relative_dirs["forward"] = (pos[0] - 1, pos[1])  # pyrefly: ignore[unsupported-operation]
+    relative_dirs["left"] = (pos[0], pos[1] + 1)  # pyrefly: ignore[unsupported-operation]
+    relative_dirs["right"] = (pos[0], pos[1] - 1)  # pyrefly: ignore[unsupported-operation]
+    relative_dirs["behind"] = (pos[0] + 1, pos[1])  # pyrefly: ignore[unsupported-operation]
   elif agent_dir == 3:  # Facing up
-    relative_dirs["forward"] = (pos[0], pos[1] - 1)
-    relative_dirs["left"] = (pos[0] - 1, pos[1])
-    relative_dirs["right"] = (pos[0] + 1, pos[1])
-    relative_dirs["behind"] = (pos[0], pos[1] + 1)
+    relative_dirs["forward"] = (pos[0], pos[1] - 1)  # pyrefly: ignore[unsupported-operation]
+    relative_dirs["left"] = (pos[0] - 1, pos[1])  # pyrefly: ignore[unsupported-operation]
+    relative_dirs["right"] = (pos[0] + 1, pos[1])  # pyrefly: ignore[unsupported-operation]
+    relative_dirs["behind"] = (pos[0], pos[1] + 1)  # pyrefly: ignore[unsupported-operation]
 
   # Get information about surrounding cells
   neighbor_info = []
@@ -290,7 +290,7 @@ def describe_fourrooms_environment(
       else "unknown"
   )
 
-  direction_str = DIRECTION_MAP.get(agent_dir, "unknown")
+  direction_str = DIRECTION_MAP.get(agent_dir, "unknown")  # pyrefly: ignore[no-matching-overload]
 
   # Create directional mapping explanation based on agent's current direction
   if agent_dir == 0:  # Facing right
@@ -319,6 +319,7 @@ def describe_fourrooms_environment(
     )
 
   description = (
+      # pyrefly: ignore[unbound-name]
       "FourRooms gridworld: avoid walls (-0.1 penalty), reach goal (+1 reward,"
       " triggers reset). As we see in the map marked by an arrow (<,v,...) the"
       f" agent is at {pos} facing {direction_str}. {orientation_explanation}."
@@ -355,10 +356,11 @@ def describe_fourrooms_environment(
 
     # Calculate first action using the enhanced function
     first_action, action_explanation = determine_first_action(
-        agent_dir, pos, goal_pos, surroundings
+        agent_dir, pos, goal_pos, surroundings  # pyrefly: ignore[bad-argument-type]
     )
 
     execution_plan = (
+        # pyrefly: ignore[unsupported-operation]
         f"From position {pos} to goal at {goal_pos}, the steps needed in the"
         f" x-direction is ({goal_pos[0] - pos[0]}) and then we need to move"
         f" ({goal_pos[1] - pos[1]}) in the y-direction. First move in"
@@ -463,10 +465,11 @@ def describe_fourrooms_environment(
 
     # Calculate first action using the enhanced function
     first_action, action_explanation = determine_first_action(
-        agent_dir, pos, target_center_pos, surroundings
+        agent_dir, pos, target_center_pos, surroundings  # pyrefly: ignore[bad-argument-type]
     )
 
     execution_plan = (
+        # pyrefly: ignore[unsupported-operation]
         "Three-phase navigation plan:\n\nPhase 1: Navigate to own room"
         f" doorway\nStarting at position {pos}, navigate to the doorway of our"
         f" current room at {agent_doorway}.\nDistance:"

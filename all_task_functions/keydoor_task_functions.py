@@ -274,6 +274,7 @@ def describe_keydoor_environment(env):
           goal_pos = (i, j)
 
   description = (
+      # pyrefly: ignore[unbound-name]
       "Key-Door gridworld: avoid walls (-0.1 penalty) and unlock the door to"
       " reach the goal (+1 reward, triggers reset). As we see in the map"
       f" marked by an arrow (> or v or < or ^), the agent is at {pos} facing"
@@ -308,10 +309,11 @@ def describe_keydoor_environment(env):
   )
 
   first_action, action_explanation = determine_first_action(
-      agent_dir, pos, key_pos, surroundings
+      agent_dir, pos, key_pos, surroundings  # pyrefly: ignore[bad-argument-type]
   )
 
   execution_plan = (
+      # pyrefly: ignore[bad-argument-type, unsupported-operation]
       "Three-phase navigation plan:\n\nPhase 1: Navigate to the key\nFrom"
       f" position {pos} to key at {key_pos}, the x-distance is"
       f" {key_pos[0] - pos[0]} and the y-distance is"

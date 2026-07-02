@@ -107,7 +107,7 @@ def run_formula(state, formula_data, max_attempts, sampling, history,
   use_lm_setting = formula_data.get('use_lm', False)
   if isinstance(use_lm_setting, str):
     try:
-      s = evaluator(task_name)
+      s = evaluator(task_name)  # pyrefly: ignore[not-callable]
       s.names = state
       use_lm_setting = s.eval(use_lm_setting)
     except Exception as e:  # pylint: disable=broad-exception-caught
@@ -135,7 +135,7 @@ def run_formula(state, formula_data, max_attempts, sampling, history,
     rhs_default = formula.split('=', 1)[1].strip() if '=' in formula else None
     if rhs_default is not None:
       try:
-        s = evaluator(task_name)
+        s = evaluator(task_name)  # pyrefly: ignore[not-callable]
         s.names = state
         default_value = s.eval(rhs_default)
         if isinstance(default_value, (int, float)):
@@ -197,7 +197,7 @@ def run_formula(state, formula_data, max_attempts, sampling, history,
 
       if sampled_formula.startswith(default_assignment):
         try:
-          s = evaluator(task_name)
+          s = evaluator(task_name)  # pyrefly: ignore[not-callable]
           s.names = state
           value = s.eval(sampled_formula.split('=', 1)[1].strip())
           is_number = expected_type in [
@@ -252,7 +252,7 @@ def run_formula(state, formula_data, max_attempts, sampling, history,
         lhs = lhs.strip()
         rhs = rhs.strip()
 
-        s = evaluator(task_name)
+        s = evaluator(task_name)  # pyrefly: ignore[not-callable]
         s.names = state
         value = s.eval(rhs)
 
@@ -340,7 +340,7 @@ def simulation_stream_generator(
     if ' if ' in f' {formula_data["next"]} ':
       # Contains a proper if statement with spaces
       expression = formula_data['next'].strip()
-      s = evaluator()
+      s = evaluator()  # pyrefly: ignore[not-callable]
       s.names = state
       current_operator_id = s.eval(expression)
     else:
@@ -438,7 +438,7 @@ def generate_operators(
     default_values = {}
 
   systems_definitions = preprocess_systems_definitions(systems_definitions)
-  s = evaluator(task_name)
+  s = evaluator(task_name)  # pyrefly: ignore[not-callable]
 
   # Initialize state dictionary and make it self-referential
   state = {}

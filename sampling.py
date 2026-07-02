@@ -140,7 +140,7 @@ def run_model_command(prompt: str, model: str, api_key: str) -> str:
 
   # Get API endpoint (no longer requiring Google project_id or location)
   if provider == 'google':
-    api_endpoint = provider_details['api_endpoint_template'].format(
+    api_endpoint = provider_details['api_endpoint_template'].format(  # pyrefly: ignore[missing-attribute]
         model=model, api_key=api_key
     )
   else:

@@ -457,7 +457,7 @@ class ECSEditor:
         first_operator_id = 'operator_world_heading_1'  # Fallback to default
 
       sampler = (
-          lambda prompt, context, default_assignment, value=None, mode='full': self.sampling(  # pylint: disable=line-too-long
+          lambda prompt, context, default_assignment, value=None, mode='full': self.sampling(  # pylint: disable=line-too-long  # pyrefly: ignore[not-callable]
               prompt,
               context,
               default_assignment,
@@ -519,7 +519,7 @@ class ECSEditor:
   def apply_query(self, query):
     """Apply a query to the simulation history."""
     try:
-      s = evaluator(self.task_name)  # Initialize the SimpleEval evaluator
+      s = evaluator(self.task_name)  # Initialize the SimpleEval evaluator  # pyrefly: ignore[not-callable]
       query_dict = s.eval(f'dict({query})')  # Safely evaluate the query string
       query_result = query_history(
           self.simulation_data['stream'], **query_dict
