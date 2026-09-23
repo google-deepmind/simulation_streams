@@ -18,6 +18,7 @@ import argparse
 import json
 import os
 import pathlib
+import re
 
 from editor import ECSEditor
 from flask import Flask
@@ -78,10 +79,17 @@ def load_ecs_from_file(file_path, the_index: int = 0):
 @app.route('/update_ecs_name', methods=['POST'])
 def update_ecs_name():
   """Update the ECS name."""
-  data = request.json
-  new_name = data['name']
-  js_code = ecs_editor.update_ecs_name(new_name)
-  return jsonify(js_code=js_code)
+  data = request.get_json(silent=True) or {}
+  new_name = data.get('name', '')
+  if not isinstance(new_name, str) or not re.match(
+      r'^[a-zA-Z0-9_-]+$', new_name
+  ):
+    return jsonify(error='Invalid ECS name'), 400
+  try:
+    js_code = ecs_editor.update_ecs_name(new_name)
+    return jsonify(js_code=js_code)
+  except ValueError as e:
+    return jsonify(error=str(e)), 400
 
 
 @app.route('/add_entity', methods=['POST'])

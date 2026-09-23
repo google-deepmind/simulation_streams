@@ -38,6 +38,39 @@ evaluator = evaluator.evaluator
 
 matplotlib.use('Agg')
 
+SAFE_NAME_PATTERN = re.compile(r'^[a-zA-Z0-9_-]+$')
+PROTECTED_FILENAMES = frozenset({
+    'app',
+    'editor',
+    'evaluator',
+    'expressions',
+    'sampling',
+    'simulation_utils',
+    'simulation_streams',
+    'the_tasks',
+})
+
+
+def sanitize_filename(name: str, default: str = 'ecs_config') -> str:
+  """Sanitize filename to prevent path traversal and overwriting code files."""
+  if not name or not isinstance(name, str):
+    return default
+  if (
+      os.path.basename(name) != name
+      or '/' in name
+      or '\\' in name
+      or '..' in name
+  ):
+    raise ValueError(f"Path traversal detected in name: '{name}'")
+  if not SAFE_NAME_PATTERN.match(name):
+    raise ValueError(
+        f"Invalid name '{name}': only alphanumeric, hyphen, and underscore"
+        ' characters are allowed.'
+    )
+  if name in PROTECTED_FILENAMES:
+    return f'{name}_config'
+  return name
+
 
 def get_unique_filename(base_path):
   """Generate a unique filename."""
@@ -158,7 +191,8 @@ class ECSEditor:
 
   def update_ecs_name(self, name: str):
     """Update the name of the ECS configuration."""
-    self.ecs_name = name
+    sanitized = sanitize_filename(name, default='ecs_config')
+    self.ecs_name = sanitized
     return self.refresh_gui()
 
   def add_entity(self, entity_name=None):
@@ -385,7 +419,7 @@ class ECSEditor:
       operators = self.ecs['systems_definitions'].get(self.current_component,
                                                       [])
       if isinstance(self.current_operator_index, int):
-        if 0 <= self.current_operator_index < len(operators):  # type: ignore
+        if 0 <= self.current_operator_index < len(operators):
           self.ecs['systems_definitions'][self.current_component].pop(
               self.current_operator_index
           )
@@ -400,7 +434,7 @@ class ECSEditor:
     if self.current_component and self.current_operator_index is not None:
       operators = self.ecs['systems_definitions'][self.current_component]
       index = self.current_operator_index
-      if up and index > 0:  # type: ignore
+      if up and index > 0:
         (
             self.ecs['systems_definitions'][self.current_component][index],
             self.ecs['systems_definitions'][self.current_component][index - 1],
@@ -598,7 +632,8 @@ class ECSEditor:
   def save_ecs_configuration_py(self):
     """Save the ECS configuration to a Python file."""
     try:
-      py_file = f'{self.ecs_name}.py'
+      safe_name = sanitize_filename(self.ecs_name, default='ecs_config')
+      py_file = f'{safe_name}.py'
       ecs_dict = {
           'entities': self.ecs['entities'],
           'variables': self.ecs['variables'],
@@ -735,7 +770,8 @@ class ECSEditor:
           ],
       }
       try:
-        py_file = f'{component_name}.py'
+        safe_name = sanitize_filename(component_name, default='component')
+        py_file = f'{safe_name}.py'
         def dict_to_str(d, indent=0):
           """Convert dictionary to a string with proper formatting."""
           result = []
@@ -1037,22 +1073,22 @@ class ECSEditor:
           else:
             formatted_value = f"<span style='color: #e6db74;'>'{v}'</span>"
         elif isinstance(v, bool):
-          formatted_value = f"<span style='color: #ae81ff;'>{v}</span>"
+          formatted_value = f'<span style="color: #ae81ff;">{v}</span>'
         elif isinstance(v, (int, float)):
-          formatted_value = f"<span style='color: #a6e22e;'>{v}</span>"
+          formatted_value = f'<span style="color: #a6e22e;">{v}</span>'
         else:
-          formatted_value = f"<span style='color: #f8f8f2;'>{v}</span>"
+          formatted_value = f'<span style="color: #f8f8f2;">{v}</span>'
 
         formatted_line = (
-            f"{formatted_key}<span style='color: #f8f8f2;'>:</span> "
-            f"{formatted_value}")
+            f'{formatted_key}<span style="color: #f8f8f2;">:</span> '
+            f'{formatted_value}')
         formatted_lines.append(formatted_line)
 
       formatted_line = (
-          "<span style='color: #f8f8f2;'>{" + ', '.join(formatted_lines) +
+          '<span style="color: #f8f8f2;">{' + ', '.join(formatted_lines) +
           '}</span>')
     else:
-      formatted_line = f"<span style='color: #f8f8f2;'>{value}</span>"
+      formatted_line = f'<span style="color: #f8f8f2;">{value}</span>'
 
     # Finally, escape the formatted HTML for JavaScript
     return escape_for_js(formatted_line)
@@ -1356,7 +1392,7 @@ class ECSEditor:
       operators = self.ecs['systems_definitions'].get(self.current_component,
                                                       [])
       if isinstance(self.current_operator_index, int):
-        if 0 <= self.current_operator_index < len(operators):  # type: ignore
+        if 0 <= self.current_operator_index < len(operators):
           operator = operators[self.current_operator_index]
           if field_name in operator:
             del operator[field_name]

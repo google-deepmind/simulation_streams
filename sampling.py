@@ -153,20 +153,21 @@ def run_model_command(prompt: str, model: str, api_key: str) -> str:
   # Convert the payload to JSON
   payload_json = json.dumps(payload)
 
-  # Construct the curl command (keep line length reasonable)
-  header_str = ' '.join(
-      [f'-H "{key}: {value}"' for key, value in headers.items()]
-  )
-  command = f"curl {api_endpoint} {header_str} -d '{payload_json}'"
+  # Construct the curl command arguments safely without shell execution
+  command: list[str] = ['curl', str(api_endpoint)]
+  for key, value in headers.items():
+    command.extend(['-H', f'{key}: {value}'])
+  command.extend(['-d', payload_json])
 
-  # Run the command and capture the output
-  result = subprocess.run(
-      command, shell=True, capture_output=True, text=True, check=True
-  )
-  # print(result)
-
-  if result.returncode != 0:
-    raise RuntimeError(f'curl command failed with error: {result.stderr}')
+  # Run the command and capture the output safely without shell interpolation
+  try:
+    result = subprocess.run(
+        command, capture_output=True, text=True, check=True
+    )
+  except subprocess.CalledProcessError as exc:
+    raise RuntimeError(
+        f'curl command failed with error: {exc.stderr}'
+    ) from exc
 
   # Parse the output JSON
   try:
