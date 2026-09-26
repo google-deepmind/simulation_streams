@@ -138,10 +138,12 @@ def run_formula(state, formula_data, max_attempts, sampling, history,
         s = evaluator(task_name)  # pyrefly: ignore[not-callable]
         s.names = state
         default_value = s.eval(rhs_default)
-        if isinstance(default_value, (int, float)):
-          expected_type = 'number'
-        elif isinstance(default_value, bool):
+        # bool is an int subclass, but sampled boolean and numeric values
+        # must follow the distinct expected-type checks below.
+        if isinstance(default_value, bool):
           expected_type = 'bool'
+        elif isinstance(default_value, (int, float)):
+          expected_type = 'number'
         else:
           expected_type = type(default_value).__name__
       except Exception as e:  # pylint: disable=broad-exception-caught
@@ -200,9 +202,11 @@ def run_formula(state, formula_data, max_attempts, sampling, history,
           s = evaluator(task_name)  # pyrefly: ignore[not-callable]
           s.names = state
           value = s.eval(sampled_formula.split('=', 1)[1].strip())
-          is_number = expected_type in [
-              'number', 'int', 'int64', 'float'
-          ] and isinstance(value, (int, float, np.number))
+          is_number = (
+              expected_type in ['number', 'int', 'int64', 'float']
+              and isinstance(value, (int, float, np.number))
+              and not isinstance(value, bool)
+          )
           is_bool = expected_type == 'bool' and isinstance(value, bool)
           is_str = expected_type == 'str' and isinstance(value, str)
           is_tuple = expected_type == 'tuple' and isinstance(value, tuple)
